@@ -27,7 +27,7 @@ def mes():
     return res
 
 @app.route("/datosSem")
-def mes():
+def semana():
     client = Groq(
     api_key="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",
     )
