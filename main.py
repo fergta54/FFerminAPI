@@ -1,66 +1,44 @@
 import os
 from groq import Groq
-from flask import Flask, jsonify, request
+from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-@app.route("/")
-def root():
-    return "root"
+# API key para el cliente Groq
+API_KEY = "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"
 
+# Página principal con un formulario simple para enviar mensajes
+@app.route("/", methods=["GET", "POST"])
+def chat():
+    response = None
+    if request.method == "POST":
+        user_input = request.form["message"]
+        response = get_groq_response(user_input)
+    
+    # HTML simple con un formulario para ingresar el mensaje
+    html = """
+    <h1>Chat con Groq</h1>
+    <form method="POST">
+        <label for="message">Escribe tu mensaje:</label><br>
+        <input type="text" id="message" name="message" required><br><br>
+        <input type="submit" value="Enviar">
+    </form>
+    <br>
+    {% if response %}
+        <strong>Respuesta:</strong> {{ response }}
+    {% endif %}
+    """
+    return render_template_string(html, response=response)
 
-@app.route("/datosMes")
-def mes():
-    client = Groq(
-    api_key="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",
-    )
+# Función para obtener la respuesta del modelo Groq
+def get_groq_response(user_input):
+    client = Groq(api_key=API_KEY)
     chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": "Escribe solamente un numero del 1 al 10 nada mas",
-            }
-        ],
+        messages=[{"role": "user", "content": user_input}],
         model="llama3-8b-8192",
     )
-    res = chat_completion.choices[0].message.content
-    return res
-
-@app.route("/datosSem")
-def semana():
-    client = Groq(
-    api_key="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",
-    )
-    chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": "Solo dame un ejemplo de una tabla de my sql nada mas gracias.",
-            }
-        ],
-        model="llama3-8b-8192",
-    )
-    res = chat_completion.choices[0].message.content
-    return res
-
-@app.route("/var/<data>")
-def varD(data):
-    client = Groq(
-    api_key="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",
-    )
-    chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": data,
-            }
-        ],
-        model="llama3-8b-8192",
-    )
-    res = chat_completion.choices[0].message.content
-    return res
-
+    return chat_completion.choices[0].message.content
 
 
 if __name__ == "__main__":
-    app.run(debug=False,host='0.0.0.0')
+    app.run(debug=False, host='0.0.0.0')
